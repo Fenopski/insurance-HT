@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypertension Underwriting Tool</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f0f4f8;
+  color: #1a2433;
+  min-height: 100vh;
+}
+
+/* ═══ HEADER ═══ */
+.header {
+  background: linear-gradient(135deg, #002d62 0%, #005cbf 100%);
+  color: white;
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-logo {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 5px 12px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.header h1 { font-size: 18px; font-weight: 600; }
+.header p { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+
+/* ═══ LAYOUT ═══ */
+.main {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  min-height: calc(100vh - 62px);
+}
+
+/* ═══ LEFT PANEL ═══ */
+.left-panel {
+  background: white;
+  border-right: 1px solid #dde6f0;
+  padding: 20px;
+  overflow-y: auto;
+  max-height: calc(100vh - 62px);
+  position: sticky;
+  top: 62px;
+}
+
+.section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f4f8;
+}
+.section:last-child { border-bottom: none; margin-bottom: 0; }
+
+.sec-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #64748b;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* BP badge */
+.bp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  transition: all 0.3s;
+}
+
+/* Select */
+.sel-row { margin-bottom: 10px; }
+.sel-row label { display: block; font-size: 12px; color: #64748b; margin-bottom: 4px; font-weight: 500; }
+.sel-row select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid #dde6f0;
+  border-radius: 8px;
+  font-size: 13px;
+  background: white;
+  color: #1a2433;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.sel-row select:focus { border-color: #005cbf; }
+
+/* Checkbox */
+.chk-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-bottom: 2px;
+  border: 1.5px solid transparent;
+}
+.chk-row:hover { background: #f8fafc; }
+.chk-row.active { background: #eff6ff; border-color: #bfdbfe; }
+.chk-row input[type="checkbox"] {
+  width: 17px; height: 17px;
+  cursor: pointer;
+  margin-top: 1px;
+  accent-color: #005cbf;
+  flex-shrink: 0;
+}
+.chk-main { font-size: 13px; color: #1e293b; font-weight: 500; line-height: 1.3; }
+.chk-sub { font-size: 11px; color: #94a3b8; margin-top: 1px; line-height: 1.3; }
+
+/* ═══ RIGHT PANEL ═══ */
+.right-panel {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* BP Summary Card */
+.bp-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #dde6f0;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.bp-nums {
+  text-align: center;
+  padding-right: 20px;
+  border-right: 1px solid #e8eef4;
+  flex-shrink: 0;
+}
+.bp-num-val { font-size: 34px; font-weight: 900; color: #002d62; line-height: 1; }
+.bp-num-lbl { font-size: 10px; color: #94a3b8; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+.bp-info { flex: 1; }
+.bp-stage-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.bp-stage-desc { font-size: 12px; color: #64748b; line-height: 1.5; }
+
+/* Products grid */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 14px;
+}
+
+/* Product card */
+.pcard {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #dde6f0;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.pcard:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+
+.pcard-head {
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f0f4f8;
+}
+.pcard-name { font-size: 14px; font-weight: 700; color: #002d62; }
+.pcard-sub { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+
+/* Status badges */
+.sbadge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.s-standard { background: #d1fae5; color: #065f46; }
+.s-loading   { background: #fef9c3; color: #713f12; }
+.s-loading-h { background: #ffedd5; color: #9a3412; }
+.s-cmo       { background: #fce7f3; color: #831843; }
+.s-decline   { background: #fee2e2; color: #991b1b; }
+
+/* Risk Meter */
+.pcard-body { padding: 14px 16px; }
+.meter { margin-bottom: 10px; }
+.meter-track {
+  height: 10px;
+  background: linear-gradient(to right, #22c55e 0%, #84cc16 20%, #eab308 40%, #f97316 65%, #ef4444 85%, #991b1b 100%);
+  border-radius: 5px;
+  position: relative;
+  margin-bottom: 5px;
+}
+.meter-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #1e293b;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.meter-lbls {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #94a3b8;
+}
+
+/* EM Display */
+.em-box {
+  text-align: center;
+  padding: 8px 0;
+  margin-bottom: 6px;
+}
+.em-val { font-size: 22px; font-weight: 900; color: #002d62; }
+.em-lbl { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+
+/* Notes */
+.notes { list-style: none; }
+.notes li {
+  font-size: 11.5px;
+  color: #475569;
+  padding: 3px 0 3px 12px;
+  position: relative;
+  line-height: 1.4;
+}
+.notes li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: #f0f4f8;
+  margin: 8px 0;
+}
+
+/* Disclaimer */
+.disclaimer {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #dde6f0;
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+/* Med Alert Banner */
+.med-alert {
+  background: #fff7ed;
+  border: 2px solid #f97316;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  display: none;
+}
+.med-alert.show { display: block; }
+.med-alert-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #9a3412;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.med-alert-body { font-size: 12px; color: #7c2d12; line-height: 1.6; }
+.med-alert-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.med-tag {
+  background: #fed7aa;
+  color: #9a3412;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Med checkbox — red-tinted when active */
+.chk-row.med-active { background: #fff7ed; border-color: #fed7aa; }
+
+/* Checkbox group grid for meds */
+.med-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+.med-grid .chk-row { margin-bottom: 0; }
+
+/* BP Reading Table */
+.bp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+.bp-table th {
+  background: #f0f4f8;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 8px;
+  text-align: center;
+  border-bottom: 2px solid #dde6f0;
+}
+.bp-table td {
+  padding: 5px 6px;
+  text-align: center;
+  border-bottom: 1px solid #f0f4f8;
+}
+.bp-table tr:last-child td { border-bottom: none; }
+.bp-table .row-num {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+  width: 28px;
+}
+.bp-input {
+  width: 72px;
+  padding: 6px 8px;
+  border: 1.5px solid #dde6f0;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  color: #002d62;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.bp-input:focus { border-color: #005cbf; background: #eff6ff; }
+.bp-input.filled { border-color: #93c5fd; background: #f0f9ff; }
+.bp-avg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+.bp-avg-label { font-size: 12px; color: #1e40af; font-weight: 600; }
+.bp-avg-value { font-size: 22px; font-weight: 900; color: #002d62; }
+.bp-avg-unit  { font-size: 11px; color: #60a5fa; margin-left: 3px; }
+.bp-count { font-size: 11px; color: #94a3b8; }
+
+/* Risk Factor blocks */
+.rf-block {
+  background: #f8fafc;
+  border: 1px solid #e8eef4;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.rf-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 8px;
+}
+.bmi-calc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 6px;
+}
+.bmi-calc input {
+  width: 58px;
+  padding: 4px 6px;
+  border: 1.5px solid #dde6f0;
+  border-radius: 6px;
+  font-size: 12px;
+  outline: none;
+  text-align: center;
+}
+.bmi-calc input:focus { border-color: #005cbf; }
+#bmi-result {
+  font-weight: 700;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  min-width: 60px;
+  text-align: center;
+}
+.ms-counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+.info-box {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.6;
+  padding: 8px 10px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  border-left: 3px solid #cbd5e1;
+  margin-bottom: 10px;
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .main { grid-template-columns: 1fr; }
+  .left-panel { max-height: none; position: relative; top: 0; }
+  .products-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 540px) {
+  .products-grid { grid-template-columns: 1fr; }
+  .bp-card { flex-direction: column; align-items: flex-start; }
+  .bp-nums { border-right: none; border-bottom: 1px solid #e8eef4; padding-right: 0; padding-bottom: 10px; width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <h1>🩺 Hypertension Underwriting Assessment</h1>
+    <p>ประเมินความเสี่ยงและผลิตภัณฑ์ที่รับได้ สำหรับผู้ป่วยโรคความดันโลหิตสูง</p>
+  </div>
+</div>
+
+<div class="main">
+  <!-- ═══ LEFT: INPUTS ═══ -->
+  <div class="left-panel">
+
+    <!-- Blood Pressure -->
+    <div class="section">
+      <div class="sec-title">📊 Blood Pressure — ค่าเฉลี่ยย้อนหลัง 1 ปี</div>
+
+      <table class="bp-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Systolic<br><span style="font-weight:400;opacity:.7;">(ค่าบน)</span></th>
+            <th>Diastolic<br><span style="font-weight:400;opacity:.7;">(ค่าล่าง)</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="row-num">1</td><td><input class="bp-input" id="s1" type="number" min="60" max="300" placeholder="—" oninput="calcBPAvg()"></td><td><input class="bp-input" id="d1" type="number" min="30" max="160" placeholder="—" oninput="calcBPAvg()"></td></tr>
+          <tr><td class="row-num">2</td><td><input class="bp-input" id="s2" type="number" min="60" max="300" placeholder="—" oninput="calcBPAvg()"></td><td><input class="bp-input" id="d2" type="number" min="30" max="160" placeholder="—" oninput="calcBPAvg()"></td></tr>
+          <tr><td class="row-num">3</td><td><input class="bp-input" id="s3" type="number" min="60" max="300" placeholder="—" oninput="calcBPAvg()"></td><td><input class="bp-input" id="d3" type="number" min="30" max="160" placeholder="—" oninput="calcBPAvg()"></td></tr>
+          <tr><td class="row-num">4</td><td><input class="bp-input" id="s4" type="number" min="60" max="300" placeholder="—" oninput="calcBPAvg()"></td><td><input class="bp-input" id="d4" type="number" min="30" max="160" placeholder="—" oninput="calcBPAvg()"></td></tr>
+          <tr><td class="row-num">5</td><td><input class="bp-input" id="s5" type="number" min="60" max="300" placeholder="—" oninput="calcBPAvg()"></td><td><input class="bp-input" id="d5" type="number" min="30" max="160" placeholder="—" oninput="calcBPAvg()"></td></tr>
+        </tbody>
+      </table>
+
+      <div class="bp-avg-row">
+        <div>
+          <div class="bp-avg-label">📊 ค่าเฉลี่ย (Average)</div>
+          <div class="bp-count" id="bp-count">กรุณากรอกอย่างน้อย 1 ครั้ง</div>
+        </div>
+        <div style="text-align:right;">
+          <span class="bp-avg-value" id="avg-display">—/—</span>
+          <span class="bp-avg-unit">mmHg</span>
+        </div>
+      </div>
+
+      <div id="bp-badge" class="bp-badge" style="background:#e2e8f0;color:#64748b;">— กรอกค่าความดันก่อน</div>
+    </div>
+
+    <!-- Treatment -->
+    <div class="section">
+      <div class="sec-title">💊 Treatment — การรักษา</div>
+
+      <div class="sel-row">
+        <label>จำนวนยาลดความดัน (Anti-hypertensive Medications)</label>
+        <select id="meds" onchange="update()">
+          <option value="0">ไม่ใช้ยา (None)</option>
+          <option value="1">1–2 ชนิด</option>
+          <option value="3">3 ชนิดขึ้นไป ⚠️</option>
+        </select>
+      </div>
+
+      <div class="sel-row">
+        <label>ระดับการควบคุมความดัน (BP Control)</label>
+        <select id="control" onchange="update()">
+          <option value="good">ควบคุมได้ดี — Well-controlled</option>
+          <option value="suboptimal">ควบคุมได้ไม่ดี — Sub-optimal ⚠️</option>
+        </select>
+      </div>
+
+      <div class="sel-row">
+        <label>ประเภทความดันสูง (HT Type)</label>
+        <select id="httype" onchange="update()">
+          <option value="primary">Primary — ไม่ทราบสาเหตุ (>95%)</option>
+          <option value="secondary">Secondary — มีสาเหตุ (ไต, ต่อมไร้ท่อ ฯลฯ)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ⚠️ Flagged Medications -->
+    <div class="section">
+      <div class="sec-title">🚩 Flagged Medications — ยาที่ต้อง CMO</div>
+      <div style="font-size:11px;color:#94a3b8;line-height:1.5;margin-bottom:12px;">
+        ยาเหล่านี้อาจบ่งชี้ถึง <strong style="color:#7c2d12;">Heart Failure / Arrhythmia / Resistant HT</strong><br>
+        ต้องขอเอกสารเพิ่มเติมจาก Medical Attendant และ Refer CMO
+      </div>
+      <div class="med-grid">
+        <label class="chk-row" id="row-spiro">
+          <input type="checkbox" id="med-spiro" onchange="updateMedChk(this,'row-spiro'); update()">
+          <div>
+            <div class="chk-main">Spironolactone</div>
+            <div class="chk-sub">Aldactone</div>
+          </div>
+        </label>
+        <label class="chk-row" id="row-biso">
+          <input type="checkbox" id="med-biso" onchange="updateMedChk(this,'row-biso'); update()">
+          <div>
+            <div class="chk-main">Bisoprolol</div>
+            <div class="chk-sub">Cardicor</div>
+          </div>
+        </label>
+        <label class="chk-row" id="row-carve">
+          <input type="checkbox" id="med-carve" onchange="updateMedChk(this,'row-carve'); update()">
+          <div>
+            <div class="chk-main">Carvedilol</div>
+            <div class="chk-sub">Eucardic</div>
+          </div>
+        </label>
+        <label class="chk-row" id="row-furo">
+          <input type="checkbox" id="med-furo" onchange="updateMedChk(this,'row-furo'); update()">
+          <div>
+            <div class="chk-main">Furosemide</div>
+            <div class="chk-sub">Lasix</div>
+          </div>
+        </label>
+        <label class="chk-row" id="row-bume">
+          <input type="checkbox" id="med-bume" onchange="updateMedChk(this,'row-bume'); update()">
+          <div>
+            <div class="chk-main">Bumetanide</div>
+            <div class="chk-sub">Bumex</div>
+          </div>
+        </label>
+        <label class="chk-row" id="row-digo">
+          <input type="checkbox" id="med-digo" onchange="updateMedChk(this,'row-digo'); update()">
+          <div>
+            <div class="chk-main">Digoxin</div>
+            <div class="chk-sub">Lanoxin</div>
+          </div>
+        </label>
+        <label class="chk-row" id="row-amio">
+          <input type="checkbox" id="med-amio" onchange="updateMedChk(this,'row-amio'); update()">
+          <div>
+            <div class="chk-main">Amiodarone</div>
+            <div class="chk-sub">Cordarone</div>
+          </div>
+        </label>
+        <label class="chk-row" id="row-labe">
+          <input type="checkbox" id="med-labe" onchange="updateMedChk(this,'row-labe'); update()">
+          <div>
+            <div class="chk-main">Labetalol</div>
+            <div class="chk-sub">Trandate</div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- End-organ Damage -->
+    <div class="section">
+      <div class="sec-title">⚠️ End-organ Damage — ความเสียหายต่ออวัยวะ</div>
+
+      <div class="sel-row">
+        <label>Hypertensive Retinopathy (ผลต่อจอตาจากความดัน)</label>
+        <select id="retinopathy" onchange="update()">
+          <option value="0">ไม่มี (None)</option>
+          <option value="1">Grade I — Mild arteriolar narrowing</option>
+          <option value="2">Grade II — Marked narrowing</option>
+          <option value="3">Grade III — Haemorrhages / Exudates ⚠️</option>
+          <option value="4">Grade IV — Papilloedema 🚫</option>
+        </select>
+      </div>
+
+      <label class="chk-row" id="row-nephro">
+        <input type="checkbox" id="nephropathy" onchange="updateChk(this,'row-nephro'); update()">
+        <div>
+          <div class="chk-main">Hypertensive Nephropathy</div>
+          <div class="chk-sub">ไตเสื่อมจากความดันสูง — ไตเสื่อม, proteinuria สูง</div>
+        </div>
+      </label>
+
+      <label class="chk-row" id="row-protein">
+        <input type="checkbox" id="proteinuria" onchange="updateChk(this,'row-protein'); update()">
+        <div>
+          <div class="chk-main">Proteinuria / Microalbuminuria</div>
+          <div class="chk-sub">ตรวจพบโปรตีนในปัสสาวะจากการตรวจ urinalysis</div>
+        </div>
+      </label>
+
+      <label class="chk-row" id="row-lvh">
+        <input type="checkbox" id="lvh" onchange="updateChk(this,'row-lvh'); update()">
+        <div>
+          <div class="chk-main">Left Ventricular Hypertrophy (LVH)</div>
+          <div class="chk-sub">กล้ามเนื้อหัวใจห้องล่างซ้ายหนาตัว (จาก ECG หรือ Echo)</div>
+        </div>
+      </label>
+    </div>
+
+    <!-- Risk Factors -->
+    <div class="section">
+      <div class="sec-title">🔍 Risk Factors — ปัจจัยเสี่ยงเพิ่มเติม</div>
+
+      <!-- BMI -->
+      <div class="rf-block">
+        <div class="rf-title">⚖️ น้ำหนัก / BMI</div>
+        <div class="sel-row" style="margin-bottom:6px;">
+          <select id="bmi" onchange="update()">
+            <option value="0">ปกติ — BMI &lt; 25</option>
+            <option value="1">น้ำหนักเกิน — BMI 25–29.9</option>
+            <option value="2">อ้วน ระดับ 1 — BMI 30–34.9</option>
+            <option value="3">อ้วน ระดับ 2 — BMI 35–39.9</option>
+            <option value="4">อ้วน ระดับ 3 — BMI ≥ 40</option>
+          </select>
+        </div>
+        <div class="bmi-calc">
+          <span>คำนวณ:</span>
+          <input type="number" id="weight" placeholder="น้ำหนัก กก." min="30" max="250" oninput="calcBMI()">
+          <input type="number" id="height" placeholder="ส่วนสูง ซม." min="100" max="250" oninput="calcBMI()">
+          <span id="bmi-result">—</span>
+        </div>
+      </div>
+
+      <!-- Smoking -->
+      <div class="rf-block">
+        <div class="rf-title">🚬 การสูบบุหรี่ (Tobacco Use)</div>
+        <div class="sel-row" style="margin-bottom:0;">
+          <select id="smoking" onchange="update()">
+            <option value="0">ไม่สูบ (Non-smoker)</option>
+            <option value="1">เลิกแล้ว &gt; 1 ปี</option>
+            <option value="2">เลิกแล้ว ≤ 1 ปี</option>
+            <option value="3">สูบ น้อยกว่า 10 มวน/วัน (Light)</option>
+            <option value="4">สูบ 10–20 มวน/วัน (Moderate)</option>
+            <option value="5">สูบ มากกว่า 20 มวน/วัน (Heavy)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Cholesterol -->
+      <div class="rf-block">
+        <div class="rf-title">🩸 ไขมันในเลือด (Cholesterol / Lipids)</div>
+        <div class="sel-row">
+          <label>Total Cholesterol</label>
+          <select id="cholesterol" onchange="update()">
+            <option value="0">ปกติ — &lt; 5.0 mmol/L (&lt;193 mg/dL)</option>
+            <option value="1">Borderline — 5.0–6.4 mmol/L (193–247)</option>
+            <option value="2">สูง — 6.5–7.9 mmol/L (251–305)</option>
+            <option value="3">สูงมาก — ≥ 8.0 mmol/L (≥309 mg/dL)</option>
+          </select>
+        </div>
+        <div class="sel-row" style="margin-bottom:0;">
+          <label>LDL Cholesterol</label>
+          <select id="ldl" onchange="update()">
+            <option value="0">Optimal — &lt; 2.6 mmol/L (&lt;100 mg/dL)</option>
+            <option value="1">Near Optimal — 2.6–3.3 mmol/L (100–127)</option>
+            <option value="2">Borderline High — 3.4–4.1 mmol/L (130–158)</option>
+            <option value="3">High — 4.1–4.9 mmol/L (159–189)</option>
+            <option value="4">Very High — ≥ 4.9 mmol/L (≥190 mg/dL)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Diabetes -->
+      <div class="rf-block">
+        <div class="rf-title">🍬 เบาหวาน (Diabetes Mellitus)</div>
+        <div class="sel-row" style="margin-bottom:0;">
+          <select id="diabetes" onchange="update()">
+            <option value="0">ไม่มีเบาหวาน</option>
+            <option value="0.5">Pre-diabetes — FBS 100–125 mg/dL หรือ HbA1c 5.7–6.4%</option>
+            <option value="1">Type 2 — ควบคุมได้ดี (HbA1c &lt; 7%)</option>
+            <option value="2">Type 2 — ควบคุมปานกลาง (HbA1c 7–8%)</option>
+            <option value="3">Type 2 — ควบคุมไม่ได้ (HbA1c &gt; 8%)</option>
+            <option value="4">Type 1</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Family History -->
+      <div class="rf-block">
+        <div class="rf-title">👨‍👩‍👧 ประวัติครอบครัว (Family History)</div>
+        <label class="chk-row" id="row-fh" style="margin-bottom:0;">
+          <input type="checkbox" id="familyHx" onchange="updateChk(this,'row-fh'); update()">
+          <div>
+            <div class="chk-main">Premature CVD ในญาติสายตรง</div>
+            <div class="chk-sub">พ่อ/แม่/พี่น้อง เป็นโรคหัวใจก่อนอายุ 55 ปี (ชาย) หรือ 65 ปี (หญิง)</div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Metabolic Syndrome -->
+      <div class="rf-block">
+        <div class="rf-title">🔄 Metabolic Syndrome — กลุ่มอาการเมทาบอลิก</div>
+        <div class="info-box">
+          <strong>คืออะไร?</strong> ภาวะที่มีปัจจัยเสี่ยงโรคหัวใจและเบาหวานรวมกัน
+          วินิจฉัยเมื่อพบ <strong>3 ใน 5 เกณฑ์</strong> ด้านล่างนี้พร้อมกัน
+        </div>
+        <label class="chk-row" id="row-ms1">
+          <input type="checkbox" id="ms-waist" onchange="updateChk(this,'row-ms1'); updateMetabolic()">
+          <div>
+            <div class="chk-main">① รอบเอวเกินเกณฑ์</div>
+            <div class="chk-sub">ชาย &gt; 90 ซม. / หญิง &gt; 80 ซม. (Asian criteria)</div>
+          </div>
+        </label>
+        <label class="chk-row" id="row-ms2">
+          <input type="checkbox" id="ms-tg" onchange="updateChk(this,'row-ms2'); updateMetabolic()">
+          <div>
+            <div class="chk-main">② Triglycerides สูง</div>
+            <div class="chk-sub">≥ 150 mg/dL (1.7 mmol/L) หรืออยู่ระหว่างรับการรักษา</div>
+          </div>
+        </label>
+        <label class="chk-row" id="row-ms3">
+          <input type="checkbox" id="ms-hdl" onchange="updateChk(this,'row-ms3'); updateMetabolic()">
+          <div>
+            <div class="chk-main">③ HDL ต่ำ</div>
+            <div class="chk-sub">ชาย &lt; 40 mg/dL / หญิง &lt; 50 mg/dL หรืออยู่ระหว่างรับการรักษา</div>
+          </div>
+        </label>
+        <label class="chk-row" id="row-ms4">
+          <input type="checkbox" id="ms-bp" onchange="updateChk(this,'row-ms4'); updateMetabolic()">
+          <div>
+            <div class="chk-main">④ ความดันโลหิตสูง</div>
+            <div class="chk-sub">≥ 130/85 mmHg หรืออยู่ระหว่างรับการรักษา HT</div>
+          </div>
+        </label>
+        <label class="chk-row" id="row-ms5">
+          <input type="checkbox" id="ms-glucose" onchange="updateChk(this,'row-ms5'); updateMetabolic()">
+          <div>
+            <div class="chk-main">⑤ น้ำตาลในเลือดสูง</div>
+            <div class="chk-sub">Fasting glucose ≥ 100 mg/dL หรืออยู่ระหว่างรับการรักษาเบาหวาน</div>
+          </div>
+        </label>
+        <div id="ms-counter" class="ms-counter" style="background:#f1f5f9;color:#64748b;">
+          <span id="ms-count-text">ติ๊ก 0/5 เกณฑ์</span>
+        </div>
+      </div>
+
+      <!-- Hidden metabolic flag (set by updateMetabolic()) -->
+      <input type="checkbox" id="metabolic" style="display:none;">
+
+      <!-- Early onset -->
+      <label class="chk-row" id="row-early">
+        <input type="checkbox" id="earlyOnset" onchange="updateChk(this,'row-early'); update()">
+        <div>
+          <div class="chk-main">Early Onset — อายุน้อยกว่า 30 ปี</div>
+          <div class="chk-sub">เริ่มมีความดันสูงก่อนอายุ 30 ปี</div>
+        </div>
+      </label>
+    </div>
+
+  </div>
+
+  <!-- ═══ RIGHT: RESULTS ═══ -->
+  <div class="right-panel">
+
+    <!-- BP Summary -->
+    <div class="bp-card">
+      <div class="bp-nums">
+        <div id="bp-display" class="bp-num-val">130/82</div>
+        <div class="bp-num-lbl">mmHg (Average)</div>
+      </div>
+      <div class="bp-info">
+        <div id="stage-name" class="bp-stage-name" style="color:#065f46;">Normal</div>
+        <div id="stage-desc" class="bp-stage-desc">ความดันโลหิตปกติ — ไม่ต้อง rating เพิ่มเติมจากตัวความดัน</div>
+      </div>
+    </div>
+
+    <!-- Flagged Medication Alert Banner -->
+    <div class="med-alert" id="med-alert">
+      <div class="med-alert-title">🚩 พบยา Red Flag ตาม HannoverRe Guideline</div>
+      <div class="med-alert-body">
+        ยาที่ผู้สมัครใช้อยู่อาจบ่งชี้ถึง <strong>Heart Failure / Arrhythmia / Resistant Hypertension</strong><br>
+        <strong>สิ่งที่ต้องทำ:</strong>
+        (1) ขอ up-to-date evidence จาก Medical Attendant พร้อม Hospital Correspondence
+        (2) Refer to <strong>specialist Chief Medical Officer (CMO)</strong> ก่อนออกเงื่อนไข
+        <div class="med-alert-list" id="med-alert-list"></div>
+      </div>
+    </div>
+
+    <!-- Product Cards -->
+    <div class="products-grid" id="products-grid"></div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer">
+      <strong>⚠️ หมายเหตุสำคัญ:</strong> ผลการประเมินนี้เป็นแนวทางเบื้องต้นเท่านั้น
+      ตัวเลข EM ที่แสดงเป็นค่าประมาณ — การคำนวณ EM จริงต้องใช้ BP Calculator อย่างเป็นทางการ
+      (Stage 1→ Calculate base EM → Adjust for treatment → Adjust for complications)
+      กรณี <strong>CMO</strong> หมายถึงต้องให้ Chief Medical Officer ตัดสินใจเพิ่มเติม •
+      EM = Extra Mortality loading
+    </div>
+  </div>
+</div>
+
+<script>
+const PRODUCTS = [
+  { id: 'life',     name: 'Life / ADB',    sub: 'ประกันชีวิต / อุบัติเหตุ',               icon: '❤️' },
+  { id: 'ci',       name: 'CI',            sub: 'โรคร้ายแรง (Critical Illness)',           icon: '🏥' },
+  { id: 'tpd_own',  name: 'TPD — Own Occ.',sub: 'ทุพพลภาพ — อาชีพตนเอง',                 icon: '🦽' },
+  { id: 'tpd_any',  name: 'TPD — Any Occ.',sub: 'ทุพพลภาพ — อาชีพใดก็ได้',              icon: '🦽' },
+  { id: 'ip',       name: 'IP (D4/D13/D26+)', sub: 'รายได้เมื่อทุพพลภาพ (Income Protection)', icon: '💰' },
+  { id: 'hospital', name: 'Hospital',      sub: 'ชดเชยค่ารักษาพยาบาล',                   icon: '🏨' },
+];
+
+function getBPStage(sys, dia) {
+  const fromSys = sys < 130 ? 0 : sys <= 139 ? 0.5 : sys <= 159 ? 1 : sys <= 179 ? 2 : sys <= 209 ? 3 : 4;
+  const fromDia = dia < 85  ? 0 : dia <= 89  ? 0.5 : dia <= 99  ? 1 : dia <= 109 ? 2 : dia <= 119 ? 3 : 4;
+  return Math.max(fromSys, fromDia);
+}
+
+const STAGE_INFO = {
+  0:   { badge:'✓ Normal',              badgeBg:'#d1fae5', badgeTxt:'#065f46', nameTxt:'#065f46',
+         name:'Normal',                 desc:'ความดันโลหิตปกติ (SBP<130, DBP<85) — ไม่ต้อง rating เพิ่มเติมจากตัวความดัน' },
+  0.5: { badge:'△ High Normal',         badgeBg:'#fef9c3', badgeTxt:'#713f12', nameTxt:'#854d0e',
+         name:'High Normal',            desc:'ความดันสูงกว่าปกติเล็กน้อย (130–139 / 85–89) — ยังไม่ถึงเกณฑ์ Hypertension แต่ต้องติดตาม' },
+  1:   { badge:'⚡ Stage 1 — Mild',     badgeBg:'#ffedd5', badgeTxt:'#9a3412', nameTxt:'#9a3412',
+         name:'Stage 1 — Mild Hypertension', desc:'SBP 140–159 / DBP 90–99 mmHg — มีการ loading เล็กน้อย ขึ้นอยู่กับการรักษาและ complications' },
+  2:   { badge:'⚠️ Stage 2 — Moderate', badgeBg:'#fecaca', badgeTxt:'#7f1d1d', nameTxt:'#b91c1c',
+         name:'Stage 2 — Moderate Hypertension', desc:'SBP 160–179 / DBP 100–109 mmHg — loading ปานกลางถึงสูง ต้องพิจารณาร่วมกับ complications' },
+  3:   { badge:'🔴 Stage 3 — Severe',   badgeBg:'#ef4444', badgeTxt:'white',   nameTxt:'#dc2626',
+         name:'Stage 3 — Severe Hypertension', desc:'SBP 180–209 / DBP 110–119 mmHg — loading สูงมาก บาง product อาจ Decline' },
+  4:   { badge:'🚫 Stage 4 — Very Severe', badgeBg:'#7f1d1d', badgeTxt:'white', nameTxt:'#991b1b',
+         name:'Stage 4 — Very Severe Hypertension', desc:'SBP ≥210 / DBP ≥120 mmHg — ปฏิเสธ (Decline) ทุกผลิตภัณฑ์' },
+};
+
+// ── FLAGGED MEDICATIONS ──
+const FLAGGED_MEDS = [
+  { id:'med-spiro', generic:'Spironolactone', brand:'Aldactone',  reason:'Heart Failure / Resistant HT' },
+  { id:'med-biso',  generic:'Bisoprolol',     brand:'Cardicor',   reason:'Heart Failure / Arrhythmia' },
+  { id:'med-carve', generic:'Carvedilol',     brand:'Eucardic',   reason:'Heart Failure / Arrhythmia' },
+  { id:'med-furo',  generic:'Furosemide',     brand:'Lasix',      reason:'Heart Failure / Resistant HT' },
+  { id:'med-bume',  generic:'Bumetanide',     brand:'Bumex',      reason:'Heart Failure' },
+  { id:'med-digo',  generic:'Digoxin',        brand:'Lanoxin',    reason:'Heart Failure / Arrhythmia' },
+  { id:'med-amio',  generic:'Amiodarone',     brand:'Cordarone',  reason:'Arrhythmia' },
+  { id:'med-labe',  generic:'Labetalol',      brand:'Trandate',   reason:'Resistant HT / Arrhythmia' },
+];
+
+function getActiveFlaggedMeds() {
+  return FLAGGED_MEDS.filter(m => document.getElementById(m.id)?.checked);
+}
+
+// ── PRODUCT CALCULATOR ──
+function calcProduct(id, inp) {
+  const { stage, sys, meds, control, httype, ret, nephro, protein, lvh, metabolic,
+          earlyOnset, bmi, smoking, cholesterol, ldl, diabetes, familyHx, flaggedMeds } = inp;
+  let score = 0, em = 0, notes = [];
+
+  // ── BASE BP ──
+  if      (stage === 4)   return { status:'decline', score:100, em:0,   notes:['BP Stage 4 (SBP≥210 / DBP≥120): Decline ทุกผลิตภัณฑ์'] };
+  else if (stage === 3)  { score = 75; em = 200; notes.push('BP Stage 3 (Severe): Base EM loading ~+150–250'); }
+  else if (stage === 2)  { score = 52; em = 100; notes.push('BP Stage 2 (Moderate): Base EM loading ~+75–150'); }
+  else if (stage === 1)  { score = 32; em = 50;  notes.push('BP Stage 1 (Mild): Base EM loading ~+25–75'); }
+  else if (stage === 0.5){ score = 10;            notes.push('High Normal: ยังไม่ต้อง rating แต่ติดตามต่อเนื่อง'); }
+  else                   { score = 5; }
+
+  // ── TREATMENT ──
+  if (meds === '3') {
+    if (sys > 176) {
+      const add = Math.round(em * 0.25);
+      em += add;
+      score = Math.min(score + 8, 90);
+      notes.push(`3+ ยา (SBP ${sys}>176): +25% EM loading (+${add} EM) เพิ่มเติม`);
+    } else {
+      notes.push('3+ ยาลดความดัน: ระวัง — อาจมี loading เพิ่มเติม ดู Rating Notes');
+    }
+  }
+  if (control === 'suboptimal') {
+    em = Math.round(em * 1.2 + 25);
+    score = Math.min(score + 12, 90);
+    notes.push('Sub-optimal control: rating เพิ่มเติม (EM สูงกว่า well-controlled)');
+  }
+  if (httype === 'secondary') {
+    notes.push('Secondary HT: ต้องระบุสาเหตุ — อาจต้องประเมินเพิ่มเติมตาม underlying cause');
+  }
+  if (earlyOnset) {
+    score = Math.min(score + 8, 88);
+    notes.push('Early onset (<30 ปี): loading เพิ่มเติม');
+  }
+  if (lipid) {
+    score = Math.min(score + 5, 88);
+    notes.push('ใช้ยาทั้ง HT + Hyperlipidaemia: rating เพิ่มเติมตาม Hyperlipidaemia Guideline');
+  }
+
+  // ── COMPLICATIONS — แยกตาม product ──
+  if (id === 'life') {
+    // LIFE / ADB rules
+    if (ret === 4) return { status:'decline', score:100, em:0, notes:['Retinopathy Grade IV (Papilloedema): Decline'] };
+    if (ret === 3) { em += 200; score = Math.min(score + 22, 88); notes.push('Retinopathy Grade III: +200 EM'); }
+    // Grade I–II: No addition (ไม่ต้องบวกเพิ่ม)
+    if (ret === 1 || ret === 2) notes.push(`Retinopathy Grade ${ret === 1 ? 'I' : 'II'}: No additional loading สำหรับ Life`);
+    if (nephro)  return { status:'cmo', score:90, em:0, notes:['Hypertensive Nephropathy: CMO required — Usually Decline'] };
+    if (protein) { score = Math.min(score + 10, 88); notes.push('Proteinuria: ดู Proteinuria Guideline แยกต่างหาก'); }
+    if (lvh)    { score = Math.max(score, 82); em = Math.max(em, 50); notes.push('LVH: CMO required + Minimum +50 EM'); return finalize(score, em, notes, 'cmo'); }
+
+  } else {
+    // CI / TPD / IP / Hospital — stricter rules
+    if (ret === 1) { /* Standard — no addition */ notes.push('Retinopathy Grade I: Standard (ไม่มี loading เพิ่ม)'); }
+    if (ret === 2) { em += 50; score = Math.min(score + 15, 80); notes.push('Retinopathy Grade II: +50 EM'); }
+    if (ret >= 3)  return { status:'decline', score:100, em:0, notes:['Retinopathy Grade III/IV: Decline'] };
+    if (nephro)    return { status:'decline', score:100, em:0, notes:['Hypertensive Nephropathy: Decline'] };
+    if (protein)   return { status:'decline', score:100, em:0, notes:['Proteinuria: Decline'] };
+    if (lvh)       return { status:'decline', score:100, em:0, notes:['Left Ventricular Hypertrophy (LVH): Decline'] };
+  }
+
+  // ── RISK FACTORS ──
+  if (metabolic) {
+    score = Math.max(score, 80);
+    notes.push('Metabolic Syndrome: Refer to CMO');
+    return finalize(score, em, notes, 'cmo');
+  }
+
+  const BMI_LBL   = ['ปกติ','น้ำหนักเกิน','อ้วน Gr.1','อ้วน Gr.2','อ้วน Gr.3'];
+  const SMOKE_LBL = ['ไม่สูบ','Ex >1yr','Ex ≤1yr','<10/วัน','10-20/วัน','>20/วัน'];
+  const CHOL_LBL  = ['ปกติ','Borderline','สูง','สูงมาก'];
+  const LDL_LBL   = ['Optimal','Near Opt.','Borderline','High','Very High'];
+  const DM_LBL    = ['ไม่มี','Pre-DM','T2-ดี','T2-ปานกลาง','T2-ไม่ดี','T1'];
+  const dmIdx     = [0,0.5,1,2,3,4].indexOf(diabetes);
+
+  if (bmi >= 1)         notes.push(`BMI: ${BMI_LBL[bmi]} — rating แยกตาม Obesity Guideline`);
+  if (smoking >= 1)     notes.push(`สูบบุหรี่: ${SMOKE_LBL[smoking]} — rating แยกตาม Tobacco Guideline`);
+  if (cholesterol >= 1) notes.push(`Cholesterol: ${CHOL_LBL[cholesterol]} — rating แยกตาม Hyperlipidaemia Guideline`);
+  if (ldl >= 2)         notes.push(`LDL: ${LDL_LBL[ldl]} — rating แยกตาม Hyperlipidaemia Guideline`);
+  if (diabetes > 0)     notes.push(`เบาหวาน: ${dmIdx>=0 ? DM_LBL[dmIdx] : 'T2'} — rating แยกตาม Diabetes Guideline`);
+  if (familyHx)         notes.push('Family history CVD: rate individually');
+
+  // Cumulative RF impact on score (indicative only)
+  const rfScore = (bmi >= 2 ? 8 : bmi === 1 ? 3 : 0)
+                + (smoking >= 4 ? 10 : smoking >= 2 ? 5 : 0)
+                + (cholesterol >= 2 ? 8 : cholesterol === 1 ? 3 : 0)
+                + (ldl >= 3 ? 8 : ldl === 2 ? 4 : 0)
+                + (diabetes >= 2 ? 12 : diabetes >= 1 ? 6 : diabetes === 0.5 ? 3 : 0)
+                + (familyHx ? 5 : 0);
+  if (rfScore > 0) score = Math.min(score + rfScore, 90);
+
+  // ── FLAGGED MEDICATIONS ──
+  if (flaggedMeds && flaggedMeds.length > 0) {
+    const names = flaggedMeds.map(m => `${m.generic} (${m.brand})`).join(', ');
+    score = Math.max(score, 80);
+    notes.push(`🚩 Flagged med: ${names} → CMO required + ขอเอกสารเพิ่มเติม`);
+    return finalize(score, em, notes, 'cmo');
+  }
+
+  return finalize(score, em, notes, null);
+}
+
+function finalize(score, em, notes, forceStatus) {
+  let status;
+  if (forceStatus === 'decline' || score >= 95) { status = 'decline'; score = 100; em = 0; }
+  else if (forceStatus === 'cmo' || score >= 80) { status = 'cmo'; score = Math.max(score, 82); }
+  else if (score >= 55 || em >= 100) { status = 'loading-h'; }
+  else if (score >= 22 || em > 0)    { status = 'loading'; }
+  else                               { status = 'standard'; em = 0; }
+  return { status, score, em, notes };
+}
+
+const STATUS_META = {
+  'standard':  { cls:'s-standard', lbl:'Standard ✓',     color:'#065f46' },
+  'loading':   { cls:'s-loading',  lbl:'Loading',         color:'#713f12' },
+  'loading-h': { cls:'s-loading-h',lbl:'Loading (High)', color:'#9a3412' },
+  'cmo':       { cls:'s-cmo',      lbl:'CMO Refer ⚡',    color:'#831843' },
+  'decline':   { cls:'s-decline',  lbl:'Decline ✗',      color:'#991b1b' },
+};
+
+function emDisplay(r) {
+  if (r.status === 'standard')  return { val: 'Standard Rate', lbl: '' };
+  if (r.status === 'decline')   return { val: 'Decline', lbl: 'ปฏิเสธรับประกัน' };
+  if (r.status === 'cmo')       return { val: 'CMO Referral', lbl: 'ส่ง Chief Medical Officer' };
+  if (r.em > 0)                 return { val: `+${r.em}% EM`, lbl: 'Extra Mortality Loading (approx.)' };
+  return { val: 'Loading', lbl: 'ดูรายละเอียดด้านล่าง' };
+}
+
+function renderCards(inp) {
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = '';
+
+  for (const p of PRODUCTS) {
+    const r = calcProduct(p.id, inp);
+    const meta = STATUS_META[r.status];
+    const ed   = emDisplay(r);
+    const pct  = Math.min(r.score, 99).toFixed(1) + '%';
+    const noteHtml = r.notes.map(n => `<li>${n}</li>`).join('');
+
+    const card = document.createElement('div');
+    card.className = 'pcard';
+    card.innerHTML = `
+      <div class="pcard-head">
+        <div>
+          <div class="pcard-name">${p.icon} ${p.name}</div>
+          <div class="pcard-sub">${p.sub}</div>
+        </div>
+        <span class="sbadge ${meta.cls}">${meta.lbl}</span>
+      </div>
+      <div class="pcard-body">
+        <div class="meter">
+          <div class="meter-track">
+            <div class="meter-dot" style="left:${pct}"></div>
+          </div>
+          <div class="meter-lbls">
+            <span>Standard</span><span>Loading</span><span>CMO</span><span>Decline</span>
+          </div>
+        </div>
+        <div class="em-box">
+          <div class="em-val" style="color:${meta.color}">${ed.val}</div>
+          ${ed.lbl ? `<div class="em-lbl">${ed.lbl}</div>` : ''}
+        </div>
+        ${noteHtml ? `<div class="divider"></div><ul class="notes">${noteHtml}</ul>` : ''}
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+}
+
+// ── BP AVERAGE CALCULATOR ──
+let avgSys = 0, avgDia = 0, bpReadingCount = 0;
+
+function calcBPAvg() {
+  const sIds = ['s1','s2','s3','s4','s5'];
+  const dIds = ['d1','d2','d3','d4','d5'];
+  let sumS = 0, sumD = 0, n = 0;
+  for (let i = 0; i < 5; i++) {
+    const s = parseFloat(document.getElementById(sIds[i]).value);
+    const d = parseFloat(document.getElementById(dIds[i]).value);
+    document.getElementById(sIds[i]).classList.toggle('filled', !isNaN(s) && s > 0);
+    document.getElementById(dIds[i]).classList.toggle('filled', !isNaN(d) && d > 0);
+    if (!isNaN(s) && !isNaN(d) && s > 0 && d > 0) { sumS += s; sumD += d; n++; }
+  }
+  bpReadingCount = n;
+  if (n > 0) {
+    avgSys = Math.round(sumS / n);
+    avgDia = Math.round(sumD / n);
+    document.getElementById('avg-display').textContent = `${avgSys}/${avgDia}`;
+    document.getElementById('bp-count').textContent = `คำนวณจาก ${n} ครั้ง`;
+  } else {
+    avgSys = 0; avgDia = 0;
+    document.getElementById('avg-display').textContent = '—/—';
+    document.getElementById('bp-count').textContent = 'กรุณากรอกอย่างน้อย 1 ครั้ง';
+  }
+  update();
+}
+
+function updateChk(el, rowId) {
+  document.getElementById(rowId).classList.toggle('active', el.checked);
+}
+
+function updateMedChk(el, rowId) {
+  document.getElementById(rowId).classList.toggle('active', el.checked);
+  document.getElementById(rowId).classList.toggle('med-active', el.checked);
+}
+
+function calcBMI() {
+  const w = parseFloat(document.getElementById('weight').value);
+  const h = parseFloat(document.getElementById('height').value);
+  const el = document.getElementById('bmi-result');
+  const sel = document.getElementById('bmi');
+  if (!w || !h || h < 100) { el.textContent = '—'; return; }
+  const bmi = w / ((h / 100) ** 2);
+  el.textContent = 'BMI ' + bmi.toFixed(1);
+  // Auto-select dropdown
+  const v = bmi < 25 ? '0' : bmi < 30 ? '1' : bmi < 35 ? '2' : bmi < 40 ? '3' : '4';
+  sel.value = v;
+  el.style.background = v === '0' ? '#d1fae5' : v === '1' ? '#fef9c3' : v === '2' ? '#ffedd5' : '#fee2e2';
+  el.style.color = v === '0' ? '#065f46' : v === '1' ? '#713f12' : v === '2' ? '#9a3412' : '#991b1b';
+  update();
+}
+
+function updateMetabolic() {
+  const ids = ['ms-waist','ms-tg','ms-hdl','ms-bp','ms-glucose'];
+  const count = ids.filter(id => document.getElementById(id).checked).length;
+  const counter = document.getElementById('ms-counter');
+  const text    = document.getElementById('ms-count-text');
+  const isMS    = count >= 3;
+  // Update hidden metabolic checkbox
+  document.getElementById('metabolic').checked = isMS;
+  text.textContent = `ติ๊ก ${count}/5 เกณฑ์${isMS ? ' — พบ Metabolic Syndrome ✓' : count === 2 ? ' — ขาดอีก 1 เกณฑ์' : ''}`;
+  if (isMS) {
+    counter.style.background = '#fce7f3'; counter.style.color = '#831843';
+  } else if (count === 2) {
+    counter.style.background = '#fff7ed'; counter.style.color = '#9a3412';
+  } else {
+    counter.style.background = '#f1f5f9'; counter.style.color = '#64748b';
+  }
+  update();
+}
+
+function update() {
+  const sys = avgSys;
+  const dia = avgDia;
+
+  // If no readings yet, show placeholder state
+  if (bpReadingCount === 0) {
+    document.getElementById('bp-badge').textContent = '— กรอกค่าความดันก่อน';
+    document.getElementById('bp-badge').style.background = '#e2e8f0';
+    document.getElementById('bp-badge').style.color = '#64748b';
+    document.getElementById('bp-display').textContent = '—/—';
+    document.getElementById('stage-name').textContent = 'รอข้อมูล';
+    document.getElementById('stage-name').style.color = '#94a3b8';
+    document.getElementById('stage-desc').textContent = 'กรอกค่าความดันอย่างน้อย 1 ครั้งเพื่อเริ่มประเมิน';
+    document.getElementById('products-grid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;font-size:13px;">กรอกค่าความดันเพื่อดูผลการประเมิน</div>';
+    return;
+  }
+
+  const stage = getBPStage(sys, dia);
+  const si = STAGE_INFO[stage] || STAGE_INFO[0];
+
+  document.getElementById('bp-display').textContent = `${sys}/${dia}`;
+
+  const badge = document.getElementById('bp-badge');
+  badge.textContent = si.badge;
+  badge.style.background = si.badgeBg;
+  badge.style.color = si.badgeTxt;
+
+  document.getElementById('stage-name').textContent = si.name;
+  document.getElementById('stage-name').style.color = si.nameTxt;
+  document.getElementById('stage-desc').textContent = si.desc;
+
+  // Flagged meds
+  const flaggedMeds = getActiveFlaggedMeds();
+
+  // Update alert banner
+  const alertEl   = document.getElementById('med-alert');
+  const alertList = document.getElementById('med-alert-list');
+  if (flaggedMeds.length > 0) {
+    alertEl.classList.add('show');
+    alertList.innerHTML = flaggedMeds.map(m =>
+      `<span class="med-tag">🚩 ${m.generic} — ${m.reason}</span>`
+    ).join('');
+  } else {
+    alertEl.classList.remove('show');
+    alertList.innerHTML = '';
+  }
+
+  const inp = {
+    stage, sys, dia,
+    meds:        document.getElementById('meds').value,
+    control:     document.getElementById('control').value,
+    httype:      document.getElementById('httype').value,
+    ret:         parseInt(document.getElementById('retinopathy').value),
+    nephro:      document.getElementById('nephropathy').checked,
+    protein:     document.getElementById('proteinuria').checked,
+    lvh:         document.getElementById('lvh').checked,
+    metabolic:   document.getElementById('metabolic').checked,
+    earlyOnset:  document.getElementById('earlyOnset').checked,
+    // detailed risk factors
+    bmi:         parseInt(document.getElementById('bmi').value),
+    smoking:     parseInt(document.getElementById('smoking').value),
+    cholesterol: parseInt(document.getElementById('cholesterol').value),
+    ldl:         parseInt(document.getElementById('ldl').value),
+    diabetes:    parseFloat(document.getElementById('diabetes').value),
+    familyHx:    document.getElementById('familyHx').checked,
+    flaggedMeds,
+  };
+
+  renderCards(inp);
+}
+
+// Initial render (show empty state)
+update();
+</script>
+
+</body>
+</html>
