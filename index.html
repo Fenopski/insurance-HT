@@ -966,13 +966,15 @@ function calcProduct(id, inp) {
   if (diabetes > 0)     notes.push(`เบาหวาน: ${dmIdx>=0 ? DM_LBL[dmIdx] : 'T2'} — rating แยกตาม Diabetes Guideline`);
   if (familyHx)         notes.push('Family history CVD: rate individually');
 
-  // Cumulative RF impact on score (indicative only)
-  const rfScore = (bmi >= 2 ? 8 : bmi === 1 ? 3 : 0)
-                + (smoking >= 4 ? 10 : smoking >= 2 ? 5 : 0)
-                + (cholesterol >= 2 ? 8 : cholesterol === 1 ? 3 : 0)
-                + (ldl >= 3 ? 8 : ldl === 2 ? 4 : 0)
-                + (diabetes >= 2 ? 12 : diabetes >= 1 ? 6 : diabetes === 0.5 ? 3 : 0)
-                + (familyHx ? 5 : 0);
+  // Cumulative RF impact on score AND em
+  const rfEM = (bmi >= 2 ? 25 : bmi === 1 ? 10 : 0)
+             + (smoking >= 4 ? 50 : smoking === 3 ? 25 : smoking >= 1 ? 10 : 0)
+             + (cholesterol >= 2 ? 25 : cholesterol === 1 ? 10 : 0)
+             + (ldl >= 3 ? 25 : ldl === 2 ? 10 : 0)
+             + (diabetes >= 3 ? 75 : diabetes >= 2 ? 50 : diabetes >= 1 ? 25 : diabetes === 0.5 ? 10 : 0)
+             + (familyHx ? 15 : 0);
+  const rfScore = Math.round(rfEM / 3);
+  if (rfEM > 0)   em = em + rfEM;
   if (rfScore > 0) score = Math.min(score + rfScore, 90);
 
   // ── FLAGGED MEDICATIONS ──
